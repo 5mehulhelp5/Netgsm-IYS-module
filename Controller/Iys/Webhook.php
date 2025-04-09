@@ -57,6 +57,21 @@ class Webhook implements HttpPostActionInterface, CsrfAwareActionInterface, Webh
     private $customerCollectionFactory;
 
     /**
+     * @var int
+     */
+    private $created = 0;
+
+    /**
+     * @var int
+     */
+    private $updated = 0;
+
+    /**
+     * @var int
+     */
+    private $errors = 0;
+
+    /**
      * @param RequestInterface $request
      * @param JsonFactory $jsonFactory
      * @param Config $config
@@ -108,7 +123,7 @@ class Webhook implements HttpPostActionInterface, CsrfAwareActionInterface, Webh
             '0' . $cleanPhone
         ];
 
-        $collection->addFieldToFilter('telephone', ['in' => $phones]);
+        $collection->addFieldToFilter('phone_number', ['in' => $phones]);
 
         if ($collection->getSize() > 0) {
             $customer = $collection->getFirstItem();
@@ -151,22 +166,16 @@ class Webhook implements HttpPostActionInterface, CsrfAwareActionInterface, Webh
                 $data = [$data];
             }
 
-            $processed = 0;
-            $created = 0;
-            $updated = 0;
-            $errors = 0;
-
             // Process each record
             foreach ($data as $record) {
                 try {
                     $this->processRecord($record);
-                    $processed++;
 
                     if ($this->config->isLoggingEnabled()) {
                         $this->logger->info('Processed webhook record', $record);
                     }
                 } catch (\Exception $e) {
-                    $errors++;
+                    $this->errors++;
                     $this->logger->error('Error processing webhook record: ' . $e->getMessage(), $record);
                 }
             }
@@ -175,10 +184,10 @@ class Webhook implements HttpPostActionInterface, CsrfAwareActionInterface, Webh
                 'success' => true,
                 'message' => sprintf(
                     'Processed %d records (%d created, %d updated, %d errors)',
-                    $processed,
-                    $created,
-                    $updated,
-                    $errors
+                    count($data),
+                    $this->created,
+                    $this->updated,
+                    $this->errors
                 )
             ]);
 
@@ -220,6 +229,9 @@ class Webhook implements HttpPostActionInterface, CsrfAwareActionInterface, Webh
             $iysData = $this->iysDataFactory->create();
             $iysData->setValue($record['recipient']);
             $iysData->setType($this->mapIysTypeToInternal($record['type']));
+            $this->created++;
+        } else {
+            $this->updated++;
         }
 
         // Try to find matching customer if no user is associated
@@ -256,19 +268,24 @@ class Webhook implements HttpPostActionInterface, CsrfAwareActionInterface, Webh
             'is_new' => $isNew
         ]);
 
-        $iysData->save();
+        try {
+            $iysData->save();
 
-        if ($this->config->isLoggingEnabled()) {
-            $this->logger->info(
-                sprintf(
-                    '%s record processed: ID %d, Phone %s, Type %s, Status %s',
-                    $isNew ? 'New' : 'Existing',
-                    $iysData->getId(),
-                    $record['recipient'],
-                    $record['type'],
-                    $record['status']
-                )
-            );
+            if ($this->config->isLoggingEnabled()) {
+                $this->logger->info(
+                    sprintf(
+                        '%s record processed: ID %d, Phone %s, Type %s, Status %s',
+                        $isNew ? 'New' : 'Existing',
+                        $iysData->getId(),
+                        $record['recipient'],
+                        $record['type'],
+                        $record['status']
+                    )
+                );
+            }
+        } catch (\Exception $e) {
+            $this->logger->error('Error saving IYS record: ' . $e->getMessage());
+            throw new \Exception('Failed to save IYS record: ' . $e->getMessage());
         }
     }
 

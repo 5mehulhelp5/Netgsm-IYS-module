@@ -7,13 +7,13 @@ use Magento\Store\Model\ScopeInterface;
 
 class Config extends AbstractHelper
 {
-    private const XML_PATH_USERNAME = 'netgsm_iys/general/username';
-    private const XML_PATH_PASSWORD = 'netgsm_iys/general/password';
-    private const XML_PATH_BRAND_CODE = 'netgsm_iys/general/brand_code';
-    private const XML_PATH_APP_KEY = 'netgsm_iys/general/app_key';
-    private const XML_PATH_ENABLE_LOGGING = 'netgsm_iys/general/enable_logging';
-    private const XML_PATH_WEBHOOK_TOKEN = 'netgsm_iys/general/webhook_token';
-    private const XML_PATH_WEBHOOK_ALLOWED_HOSTS = 'netgsm_iys/general/webhook_allowed_hosts';
+    private const XML_PATH_USERNAME = 'idangerous_iys/general/username';
+    private const XML_PATH_PASSWORD = 'idangerous_iys/general/password';
+    private const XML_PATH_BRAND_CODE = 'idangerous_iys/general/brand_code';
+    private const XML_PATH_APP_KEY = 'idangerous_iys/general/app_key';
+    private const XML_PATH_ENABLE_LOGGING = 'idangerous_iys/general/enable_logging';
+    private const XML_PATH_WEBHOOK_TOKEN = 'idangerous_iys/general/webhook_token';
+    private const XML_PATH_WEBHOOK_ALLOWED_HOSTS = 'idangerous_iys/general/webhook_allowed_hosts';
 
     /**
      * Get config value
